@@ -42,12 +42,12 @@ The steps to execute are thus:
    the `easy_predict` function from `bomb_plan.R` and then passing it three
    vectors of the form described in step 1. It will return a list of the form:
    ```
-list(bomb1=list(utm_latitude=..., utm_longitude=...,
-								latitude=..., longitude=...,
-                time=...),
-		 bomb2=list(utm_latitude=..., utm_longitude=...,
-								latitude=..., longitude=...,
-                time=...))
+   list(bomb1=list(utm_latitude=..., utm_longitude=...,
+                   latitude=..., longitude=...,
+                   time=...),
+        bomb2=list(utm_latitude=..., utm_longitude=...,
+                   latitude=..., longitude=...,
+                   time=...))
    ```
 
 ## Performance
