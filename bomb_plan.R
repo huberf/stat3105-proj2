@@ -84,12 +84,12 @@ prepare_train_data <- function() {
 	reduced_df$speed <- NA
 	for (day in levels(factor(reduced_df$day))) {
 			# estimate dt for every day
+			data <- reduced_df[reduced_df$day == day, ]
 			dt <- max(data[data$elapsed < 4000, ]$elapsed)/length(data[data$elapsed < 4000, ]$elapsed)
 			g_mat <- matrix(c(1, 0, dt, 0,
 												0, 1, 0, dt,
 												0, 0, 1, 0,
 												0, 0, 0, 1), byrow=TRUE, ncol=4)
-			data <- reduced_df[reduced_df$day == day, ]
 			dlm_spec <- dlm(
 				FF= matrix(c(1, 0, 0, 0,   0, 1, 0, 0), byrow=T, nrow=2),
 				GG= g_mat,
@@ -119,7 +119,7 @@ predict <- function(start_time, start_long, start_lat, train_data) {
     days <- as.integer(levels(factor(train_data$day)))
     # now get train data slice
     lats <- seq(5193900, 5196700, by=GRID_RESOLUTION)
-    train_data <- reduced_df[reduced_df$elapsed < 4000, ] # only keep data from first leg
+    train_data <- train_data[train_data$elapsed < 4000, ] # only keep data from first leg
     # only keep bombable points
     train_data <- train_data[train_data$bombable == TRUE, ] # don't train on points that can't be used
     DAYS <- 11
@@ -236,39 +236,17 @@ to_utm <- function(long, lat) {
     return(list(long=utm_coords[1, "long"], lat=utm_coords[1, "lat"]))
 }
 
-test_model <- function(test_data, train_data) {
-    test_data[]
-    #start_time <- min(test_data$time)
-    #start_long <- test_data$long_m[which.min(test_data$time)]
-    #start_lat <- test_data$lat_m[which.min(test_data$time)]
-    start_time <- test_data$time[1]
-    start_long <- test_data$long_m[1]
-    start_lat <- test_data$lat_m[1]
-    prediction <- predict(start_time, start_long, start_lat, train_data)
-    #print(prediction)
-    margin <- success_test(prediction, test_data[test_data$elapsed < 4000, ])
-    cat("Off by:", margin[1], "\n")
-    cat("With time error:", margin[2], "\n")
-    return(margin)
-}
-
 easy_predict <- function(start_time, start_latitude, start_longitude) {
   train_data <- prepare_train_data()
-  cat(head(train_data))
 
+  prediction <- NA
 	for (day in 1:length(start_time)) {
-    prediction <- predict(start_time[day], start_latitude[day],
+    # convert provided time to local representation
+		st_time <- as.numeric(strptime(start_time[day], format = "%Y-%m-%dT%H:%M:%S", tz="UTC"))
+    # generate actual prediction
+    prediction <- predict(st_time, start_latitude[day],
                           start_longitude[day], train_data)
-    return(prediction)
 	}
+  prediction$day_idx <- 1
+  return(prediction)
 }
-
-start_time <- c("2020-08-18T17:50:42.000Z")
-
-start_longitude <- c(-114.003)
-
-start_latitude <- c(46.88678)
-
-prediction <- easy_predict(start_time, start_longitude, start_latitude)
-
-cat(prediction)

@@ -31,12 +31,12 @@ The steps to execute are thus:
    PREDICTION 1:
    Location (lat,long):
    UTM Location (lat,long):
-   Time (seconds since epoch):
+   UTC Time (seconds since epoch):
 
    PREDICTION 2:
    Location (lat,long):
    UTM Location (lat,long):
-   Time (seconds since epoch):
+   UTC Time (seconds since epoch):
    ```
 3. Alternatively, you can programmatically access the prediction by importing
    the `easy_predict` function from `bomb_plan.R` and then passing it three
