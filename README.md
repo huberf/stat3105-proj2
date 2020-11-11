@@ -8,7 +8,7 @@ This project uses the following dependencies in R.
 * ggplot2
 * jsonlite
 * sp
-* rgdal
+* rgdal (likely optional)
 * dlm
 
 #### Running
@@ -22,8 +22,8 @@ The steps to execute are thus:
 1. Open `main.R`, and at the top, modify the `start_time`, `start_latitude` and
    `start_longitude` vectors with your data. `start_time` values should be of the form, 
    `"2020-08-18T17:50:42.000Z"` and `start_latitude` and `start_longitude`
-   should be floating point values of stanard latitude and longitude.
-2. After adding data as above, run `R main.R` and it will print to console a
+   should be floating point values of standard latitude and longitude values.
+2. After adding data as above, run `Rscript main.R` and it will print to console a
    prediction in the following form.
    ```
    Day Index: 1
