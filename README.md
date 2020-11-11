@@ -49,3 +49,8 @@ list(bomb1=list(utm_latitude=..., utm_longitude=...,
 								latitude=..., longitude=...,
                 time=...))
    ```
+
+## Performance
+
+On my own computer, the script takes approximately 6 seconds to produce a
+prediction.
