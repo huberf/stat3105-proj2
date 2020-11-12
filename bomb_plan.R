@@ -233,20 +233,49 @@ to_utm <- function(long, lat) {
                                      proj4string=CRS("+proj=longlat +datum=WGS84 +units=m"))# This step converts the longitude/latitude -> UTM
     utm_df <- spTransform(spat_df, CRSobj = "+proj=utm +zone=12 +datum=WGS84 +units=m")
     utm_coords <- coordinates(utm_df)
-    return(list(long=utm_coords[1, "long"], lat=utm_coords[1, "lat"]))
+    return(list(long=utm_coords[, "long"], lat=utm_coords[, "lat"]))
 }
 
-easy_predict <- function(start_time, start_latitude, start_longitude) {
-  train_data <- prepare_train_data()
+to_latlong <- function(utm_long, utm_lat) {
+  spat_df <- SpatialPoints(coords=cbind(utm_long, utm_lat),
+                           proj4string=CRS("+proj=utm +zone=12 +datum=WGS84"))
+  utm_df <- spTransform(spat_df, CRS("+proj=longlat +datum=WGS84"))
+  utm_coords <- coordinates(utm_df)
+  return(list(long=utm_coords[1, "utm_long"], lat=utm_coords[1, "utm_lat"]))
+}
 
-  prediction <- NA
-	for (day in 1:length(start_time)) {
-    # convert provided time to local representation
-		st_time <- as.numeric(strptime(start_time[day], format = "%Y-%m-%dT%H:%M:%S", tz="UTC"))
-    # generate actual prediction
-    prediction <- predict(st_time, start_latitude[day],
-                          start_longitude[day], train_data)
-	}
-  prediction$day_idx <- 1
+easy_predict <- function(start_time, start_longitude, start_latitude) {
+  train_data <- prepare_train_data()
+  valid_days <- c(1:8,11)
+  # keep only relatively clean days
+  train_data <- train_data[train_data$day %in% valid_days, ]
+
+  utm_coors <- to_utm(start_longitude, start_latitude)
+
+  # now pick the day with the best start
+  dists_to_start <- unlist(map(1:length(start_time), function(idx) {
+    # now get the mean distance to each days start
+    mean(unlist(map(valid_days, function(day) {
+        row <- train_data[train_data$day == day, ]
+        return(sqrt((row[1, ]$lat_m - utm_coors$lat[idx])^2 + (row[1, ]$long_m - utm_coors$long[idx])^2))
+    })))
+  }))
+  day <- which.min(dists_to_start)
+
+  # convert provided time to local representation
+  st_time <- as.numeric(strptime(start_time[day], format = "%Y-%m-%dT%H:%M:%S", tz="UTC"))
+  # generate actual prediction
+  prediction <- predict(st_time, start_latitude[day],
+                        start_longitude[day], train_data)
+
+  # now add latlong as well as existing UTM
+  latlong1 <- to_latlong(prediction$bomb1$utm_longitude, prediction$bomb1$utm_latitude)
+  prediction$bomb1$longitude <- latlong1$long
+  prediction$bomb1$latitude <- latlong1$lat
+  latlong2 <- to_latlong(prediction$bomb2$utm_longitude, prediction$bomb2$utm_latitude)
+  prediction$bomb2$longitude <- latlong2$long
+  prediction$bomb2$latitude <- latlong2$lat
+
+  prediction$day_idx <- day
   return(prediction)
 }
